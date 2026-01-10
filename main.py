@@ -1,8 +1,14 @@
 
 from fastapi import FastAPI, HTTPException, status
 from models import Product
+from database import Session, engine
+from database_models import Base, Product as DBProduct
+
+
 
 app=FastAPI()
+
+Base.metadata.create_all(bind=engine)
 
 @app.get("/")
 def greet():
@@ -15,11 +21,23 @@ products=[
      Product(id=4,name="Headphones",description="Wireless Headphones",price=199,quantity=80)
 ]
 
+def init_db():
+      db=Session()
+      count=db.query(DBProduct).count
+      if count==0:
+            for product in products:
+                  db.add(DBProduct(**product.model_dump()))
+            
+      db.commit()
+init_db()
+
 @app.get("/products")
 def get_all_products():
-    return products
+      db=Session()
+      db.query()
+      return products
 
-@app.get("/product")
+@app.get("/product/{product_id}")
 def get_product_by_id(product_id: int):
       for product in products:
            if product.id==product_id:
